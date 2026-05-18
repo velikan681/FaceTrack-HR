@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Отчеты | FaceTrack HR{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Отчеты посещаемости</h2>
+        <p class="text-muted mb-0">Дневная и месячная аналитика по присутствию сотрудников.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Сотрудник</label>
+                <select class="form-select" name="employee_id">
+                    <option value="">Все сотрудники</option>
+                    {% for employee in employees %}
+                        <option
+                            value="{{ employee.id }}"
+                            {% if selected_employee_id == employee.id %}selected{% endif %}
+                        >
+                            {{ employee.full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Дата (дневной отчет)</label>
+                <input type="date" class="form-control" name="date" value="{{ selected_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Месяц (месячный отчет)</label>
+                <input type="month" class="form-control" name="month" value="{{ selected_month }}">
+            </div>
+            <div class="col-md-2 d-grid">
+                <label class="form-label invisible">Фильтр</label>
+                <button class="btn btn-primary" type="submit">Применить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Рабочих дней в месяце</div>
+                <div class="stat-value">{{ monthly_report.summary.working_days }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Отметок присутствия</div>
+                <div class="stat-value text-success">{{ monthly_report.summary.total_present_marks }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Опозданий</div>
+                <div class="stat-value text-warning">{{ monthly_report.summary.total_late_marks }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Общее время (часы)</div>
+                <div class="stat-value">{{ "%.2f"|format(monthly_report.summary.total_hours) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+        <strong>Дневной отчет: {{ daily_report.date.strftime("%d.%m.%Y") }}</strong>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Сотрудник</th>
+                <th>Отдел</th>
+                <th>Статус</th>
+                <th>Приход</th>
+                <th>Уход</th>
+                <th>Часы</th>
+                <th>Опоздание</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in daily_report.rows %}
+                <tr>
+                    <td>{{ row.employee.full_name }}</td>
+                    <td>{{ row.employee.department.name if row.employee.department else "Без отдела" }}</td>
+                    <td>{{ row.status }}</td>
+                    <td>{{ row.check_in.strftime("%H:%M:%S") if row.check_in else "-" }}</td>
+                    <td>{{ row.check_out.strftime("%H:%M:%S") if row.check_out else "-" }}</td>
+                    <td>{{ "%.2f"|format(row.worked_hours) }}</td>
+                    <td>
+                        {% if row.is_late %}
+                            <span class="badge bg-warning text-dark">Да</span>
+                        {% else %}
+                            <span class="badge bg-success">Нет</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">Нет данных за выбранную дату.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <strong>Месячный отчет: {{ monthly_report.month_label }}</strong>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Сотрудник</th>
+                <th>Присутствий</th>
+                <th>Опозданий</th>
+                <th>Пропусков</th>
+                <th>Часов</th>
+                <th>Открытых смен</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in monthly_report.rows %}
+                <tr>
+                    <td>{{ row.employee.full_name }}</td>
+                    <td>{{ row.present_days }}</td>
+                    <td>{{ row.late_days }}</td>
+                    <td>{{ row.absences }}</td>
+                    <td>{{ "%.2f"|format(row.total_hours) }}</td>
+                    <td>{{ row.open_sessions }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">Нет данных за выбранный месяц.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

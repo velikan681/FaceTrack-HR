@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | FaceTrack HR{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">{{ page_title }}</h2>
+        <p class="text-muted mb-0">Заполните данные сотрудника и фото лица для распознавания.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('employees.list_employees') }}">
+        <i class="bi bi-arrow-left me-1"></i>Назад к списку
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">ФИО *</label>
+                    <input
+                        type="text"
+                        name="full_name"
+                        class="form-control"
+                        value="{{ employee.full_name if employee else '' }}"
+                        required
+                    >
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Должность *</label>
+                    <input
+                        type="text"
+                        name="position"
+                        class="form-control"
+                        value="{{ employee.position if employee else '' }}"
+                        required
+                    >
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Отдел</label>
+                    <select name="department_id" class="form-select">
+                        <option value="">Без отдела</option>
+                        {% for department in departments %}
+                            <option
+                                value="{{ department.id }}"
+                                {% if employee and employee.department_id == department.id %}selected{% endif %}
+                            >
+                                {{ department.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Телефон</label>
+                    <input
+                        type="text"
+                        name="phone"
+                        class="form-control"
+                        value="{{ employee.phone if employee else '' }}"
+                    >
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        class="form-control"
+                        value="{{ employee.email if employee else '' }}"
+                    >
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
+                        Фото лица {% if not employee %}*{% else %}(оставьте пустым, чтобы не менять){% endif %}
+                    </label>
+                    <input
+                        type="file"
+                        name="photo"
+                        class="form-control"
+                        accept=".jpg,.jpeg,.png"
+                        {% if not employee %}required{% endif %}
+                    >
+                </div>
+
+                {% if employee and employee.photo_filename %}
+                    <div class="col-12">
+                        <div class="small text-muted mb-2">Текущее фото:</div>
+                        <img
+                            src="{{ url_for('static', filename='uploads/' ~ employee.photo_filename) }}"
+                            class="preview-image"
+                            alt="Текущее фото"
+                        >
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit">Сохранить</button>
+                <a class="btn btn-light border" href="{{ url_for('employees.list_employees') }}">Отмена</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

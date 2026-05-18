@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Посещаемость | FaceTrack HR{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Распознавание и посещаемость</h2>
+        <p class="text-muted mb-0">Откройте веб-камеру, и система будет отмечать приход/уход автоматически.</p>
+    </div>
+</div>
+
+{% if not face_available %}
+    <div class="alert alert-danger">
+        <strong>Face-recognition недоступен:</strong> {{ face_error }}
+    </div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <video id="cameraFeed" class="camera-frame" autoplay muted playsinline></video>
+                <canvas id="captureCanvas" class="d-none"></canvas>
+                <div class="d-flex gap-2 mt-3">
+                    <button
+                        id="startCameraBtn"
+                        class="btn btn-success"
+                        {% if not face_available %}disabled{% endif %}
+                    >
+                        <i class="bi bi-camera-video-fill me-1"></i>Запустить камеру
+                    </button>
+                    <button id="stopCameraBtn" class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-stop-circle me-1"></i>Остановить
+                    </button>
+                </div>
+                <div class="small text-muted mt-2">
+                    Если браузер не находит веб-камеру, проверьте разрешения устройства.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white"><strong>Статус распознавания</strong></div>
+            <div class="card-body">
+                <div id="recognitionStatus" class="status-box status-neutral">
+                    Камера не запущена.
+                </div>
+                <div id="recognizedEmployeeCard" class="mt-3 d-none">
+                    <div class="d-flex align-items-center gap-3">
+                        <img id="recognizedPhoto" class="employee-avatar-lg" alt="photo">
+                        <div>
+                            <div class="fw-semibold" id="recognizedName">-</div>
+                            <div class="small text-muted" id="recognizedMeta">-</div>
+                            <div class="small" id="recognizedConfidence">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><strong>Лента событий</strong></div>
+            <div class="card-body">
+                <div id="eventsLog" class="events-log">
+                    <div class="text-muted small">События появятся после запуска камеры.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.attendanceConfig = {
+        recognizeUrl: "{{ url_for('attendance.recognize_and_mark') }}",
+        pollingIntervalMs: 2200
+    };
+</script>
+<script src="{{ url_for('static', filename='js/attendance.js') }}"></script>
+{% endblock %}

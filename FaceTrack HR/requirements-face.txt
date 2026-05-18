@@ -1,0 +1,13 @@
+# Optional dependencies for face recognition on Windows without Visual C++ Build Tools.
+# Step 1:
+#   pip install -r requirements-face.txt
+# Step 2:
+#   pip install face-recognition --no-deps
+#
+# Why this file is structured this way:
+# - face-recognition depends on dlib
+# - pip tries to compile dlib from source on Windows
+# - dlib-bin provides prebuilt wheels, so no Build Tools are required
+dlib-bin>=20.0.1,<21.0
+face-recognition-models>=0.3.0,<1.0
+setuptools<81

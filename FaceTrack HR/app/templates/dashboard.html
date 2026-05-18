@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд | FaceTrack HR{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">Дашборд</h2>
+        <p class="text-muted mb-0">Краткая сводка по персоналу и посещаемости.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Всего сотрудников</div>
+                <div class="stat-value">{{ stats.total_employees }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Присутствуют сегодня</div>
+                <div class="stat-value text-success">{{ stats.present_today }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Отсутствуют сегодня</div>
+                <div class="stat-value text-danger">{{ stats.absent_today }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="stat-label">Опоздали сегодня</div>
+                <div class="stat-value text-warning">{{ stats.late_today }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <strong>Динамика присутствия (текущий месяц)</strong>
+            </div>
+            <div class="card-body">
+                <canvas id="attendanceTrendChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <strong>Сотрудники по отделам</strong>
+            </div>
+            <div class="card-body">
+                <canvas id="departmentChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <strong>Последние отметки</strong>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>Дата</th>
+                <th>Сотрудник</th>
+                <th>Приход</th>
+                <th>Уход</th>
+                <th>Часы</th>
+                <th>Статус</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in stats.recent_records %}
+                <tr>
+                    <td>{{ row.work_date.strftime("%d.%m.%Y") }}</td>
+                    <td>{{ row.employee.full_name }}</td>
+                    <td>{{ row.check_in.strftime("%H:%M:%S") if row.check_in else "-" }}</td>
+                    <td>{{ row.check_out.strftime("%H:%M:%S") if row.check_out else "-" }}</td>
+                    <td>{{ "%.2f"|format(row.worked_hours or 0) }}</td>
+                    <td>
+                        {% if row.is_late %}
+                            <span class="badge bg-warning text-dark">Опоздание</span>
+                        {% elif row.check_in and not row.check_out %}
+                            <span class="badge bg-primary">На работе</span>
+                        {% else %}
+                            <span class="badge bg-success">Завершено</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Пока нет записей.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    window.dashboardData = {
+        trendLabels: {{ stats.trend_labels|tojson }},
+        trendValues: {{ stats.trend_values|tojson }},
+        departmentLabels: {{ stats.department_labels|tojson }},
+        departmentValues: {{ stats.department_values|tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
